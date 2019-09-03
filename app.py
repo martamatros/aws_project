@@ -1,5 +1,5 @@
 import boto3
-import config
+# import config
 
 from flask import Flask, render_template
 
