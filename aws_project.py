@@ -13,14 +13,8 @@ def main():
     aws_access_key_id = os.environ.get('ACCESS_KEY'),
     aws_secret_access_key = os.environ.get('SECRET_KEY'),
   )
-  print(os.environ.get('ACCESS_KEY'))
-  try:
-    response = s3.generate_presigned_post(Bucket='aws-projekt', Key='uploads/${filename}', Fields={}, Conditions=[],ExpiresIn=2592000)
-    return render_template('index.html', config=response)
-  except ClientError as e:
-    logging.error(e)
-    return render_template('index.html', config='')
-  return render_template('index.html')
+  response = s3.generate_presigned_post(Bucket='aws-projekt', Key='uploads/${filename}', Fields={}, Conditions=[],ExpiresIn=2592000)
+  return render_template('index.html', config=response)
 
 @app.route('/images')
 def list_of_images():
