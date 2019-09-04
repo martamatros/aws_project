@@ -16,8 +16,7 @@ def main():
     aws_secret_access_key = config.SECRET_KEY,
   )
   response = s3.generate_presigned_post(Bucket='aws-projekt', Key='uploads/${filename}', Fields={}, Conditions=[],ExpiresIn=2592000)
-  print(response)
-  return render_template('index.html')
+  return render_template('index.html', config=response)
 
 @app.route('/images')
 def list_of_images():
