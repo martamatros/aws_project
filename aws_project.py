@@ -9,9 +9,8 @@ def main():
   s3 = boto3.client('s3')
   try:
     response = s3.generate_presigned_post(Bucket='aws-projekt', Key='uploads/${filename}', Fields={}, Conditions=[],ExpiresIn=2592000)
-  except ClientError as e:
-        logging.error(e)
-        return None
+  except:
+    return None
   return render_template('index.html', config=response)
 
 @app.route('/images')
