@@ -1,4 +1,6 @@
 import boto3
+from botocore.exceptions import ClientError
+import logging
 
 from flask import Flask, render_template
 
@@ -9,9 +11,10 @@ def main():
   s3 = boto3.client('s3')
   try:
     response = s3.generate_presigned_post(Bucket='aws-projekt', Key='uploads/${filename}', Fields={}, Conditions=[],ExpiresIn=2592000)
-  except:
-    return None
-  return render_template('index.html', config=response)
+    return render_template('index.html', config=response)
+  except ClientError as e:
+    logging.error(e)
+    return render_template('index.html', config='')
 
 @app.route('/images')
 def list_of_images():
