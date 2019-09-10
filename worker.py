@@ -3,6 +3,7 @@ import boto3
 from botocore.config import Config
 import config
 import uuid
+from datetime import datetime
 
 s3_client = boto3.client(
   's3',
@@ -40,6 +41,7 @@ def send_logs_to_db(action, file):
         'logId': { "S": str(uuid.uuid4())},
         'action': { "S": action},
         'file': { "S": file},
+        'date': { "S": datetime.now()}
     },
   )
 

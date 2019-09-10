@@ -4,6 +4,7 @@ import boto3
 from botocore.config import Config
 import config
 import uuid
+from datetime import datetime
 
 s3_resource = boto3.resource(
   's3',
@@ -39,8 +40,6 @@ app = Flask(__name__)
 @app.route("/")
 def main():
   response = s3_client.generate_presigned_post(Bucket='mmatros', Key='uploads/${filename}', Fields={}, Conditions=[{"success_action_redirect": "http://ec2-18-216-129-165.us-east-2.compute.amazonaws.com/success"}],ExpiresIn=604800)
-  print(response)
-  request.form.getlist('key')
   return render_template('index.html', config=config, data=response)
 
 @app.route("/success")
@@ -53,7 +52,6 @@ def success():
 def list_of_images():
   bucket = s3_resource.Bucket('mmatros')
   images = []
-  imgs = []
 
   for file in bucket.objects.all():
     if file.key[-1] != "/":
@@ -65,9 +63,6 @@ def list_of_images():
 @app.route("/transform", methods=['GET', 'POST'])
 def transform():
   send_images_to_queue = request.form.getlist('imagesSelection')
-  queue_url = sqs.get_queue_url(
-    QueueName='awsprojekt.fifo'
-  )
 
   entries = []
   message_group_id = str(uuid.uuid4())
@@ -78,13 +73,10 @@ def transform():
       'MessageDeduplicationId': str(uuid.uuid4()),
       'MessageGroupId': message_group_id,
     })
-  print('entries', entries)
   response = sqs.send_message_batch(
       QueueUrl='https://sqs.us-east-2.amazonaws.com/333651036015/awsprojekt.fifo',
       Entries=entries,
   )
-  send_logs_to_db('send to sqs', 'test')
-  print('response', response)
 
   return render_template('images.html')
 
@@ -95,6 +87,7 @@ def send_logs_to_db(action, file):
         'logId': { "S": str(uuid.uuid4())},
         'action': { "S": action},
         'file': { "S": file},
+        'date': { "S": datetime.now()}
     },
   )
 
