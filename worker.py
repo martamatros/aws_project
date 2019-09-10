@@ -26,6 +26,13 @@ s3_resource = boto3.resource(
   region_name='us-east-2'
 ) 
 
+db_client = boto3.client(
+  'dynamodb',
+  aws_access_key_id = config.ACCESS_KEY,
+  aws_secret_access_key = config.SECRET_KEY,
+  region_name='us-east-2',
+)
+
 
 while True:
   response = sqs.receive_message(QueueUrl='https://sqs.us-east-2.amazonaws.com/333651036015/awsprojekt.fifo',MaxNumberOfMessages=10, VisibilityTimeout=30) 
