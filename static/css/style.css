@@ -1,7 +1,48 @@
-* {
-  color: #00448D;
+html, body {
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 img {
   width: 300px;
+}
+
+.content {
+  max-width: 700px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.nav {
+  display: flex;
+  border-bottom: 1px solid #dedede;
+}
+
+.nav__item {
+  display: block;
+  padding: 5px 20px 5px 0;
+  color: #CC0F17;
+  margin: 5px 5px 5px 0;
+  text-decoration: none;
+  font-family: Helvetica;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 300;
+}
+
+input[type="file" i], .button {
+  display: block;
+  border: 0;
+  padding: 5px 20px 5px 0;
+  color: #CC0F17;
+  margin: 5px 5px 5px 0;
+  text-decoration: none;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.button--submit {
+  background: #CC0F17;
+  color: #fff;
+  border-radius: 3px;
+  padding: 5px 20px;
 }

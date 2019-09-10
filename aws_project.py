@@ -38,13 +38,15 @@ app = Flask(__name__)
 
 @app.route("/")
 def main():
-  response = s3_client.generate_presigned_post(Bucket='mmatros', Key='uploads/${filename}', Fields={}, Conditions=[],ExpiresIn=604800)
+  response = s3_client.generate_presigned_post(Bucket='mmatros', Key='uploads/${filename}', Fields={}, Conditions=[{"success_action_redirect": "http://ec2-18-216-129-165.us-east-2.compute.amazonaws.com/success"}],ExpiresIn=604800)
   print(response)
+  request.form.getlist('key')
   return render_template('index.html', config=config, data=response)
 
 @app.route("/success")
 def success():
   send_logs_to_db('upload to s3', 'test')
+  return render_template('success.html')
 
 @app.route('/images', methods=['GET', 'POST'])
 def list_of_images():

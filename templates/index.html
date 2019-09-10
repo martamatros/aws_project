@@ -1,13 +1,15 @@
 {% extends 'layout.html' %}
+{% block title %}Post images to S3{% endblock %}
 {% block content %}
   <form action="{{ data.url }}" method="post" enctype="multipart/form-data" class="form">
     <input type="hidden" name="key" value="uploads/${filename}">
+    <input type="hidden" name="success_action_redirect" value="http://ec2-18-216-129-165.us-east-2.compute.amazonaws.com/success">
     <input type="hidden" name="x-amz-algorithm" value="{{ data.fields['x-amz-algorithm'] }}">
     <input type="hidden" name="x-amz-credential" value="{{ data.fields['x-amz-credential'] }}">
     <input type="hidden" name="x-amz-date" value="{{ data.fields['x-amz-date'] }}">
     <input type="hidden" name="policy" value="{{ data.fields.policy }}">
     <input type="hidden" name="x-amz-signature" value="{{ data.fields['x-amz-signature'] }}">
-    <input name="file" type="file">
-    <button type="submit">submit</button>
+    <input name="file" type="file" class="button">
+    <button type="submit" class="button button--submit">submit</button>
   </form>
 {% endblock %}
