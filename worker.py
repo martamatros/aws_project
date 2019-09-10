@@ -41,7 +41,7 @@ def send_logs_to_db(action, file):
         'logId': { "S": str(uuid.uuid4())},
         'action': { "S": action},
         'file': { "S": file},
-        'date': { "S": datetime.now()}
+        'date': { "S": str(datetime.now())},
     },
   )
 

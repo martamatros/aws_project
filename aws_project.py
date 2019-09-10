@@ -81,13 +81,14 @@ def transform():
   return render_template('images.html')
 
 def send_logs_to_db(action, file):
+  print(str(datetime.now()))
   db_client.put_item(
     TableName='logs',
     Item={
         'logId': { "S": str(uuid.uuid4())},
         'action': { "S": action},
         'file': { "S": file},
-        'date': { "S": datetime.now()}
+        'date': { "S": str(datetime.now())},
     },
   )
 
