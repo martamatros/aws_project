@@ -1,58 +1,99 @@
-import boto3
 from botocore.exceptions import ClientError
-import logging
-import os
-from flask import Flask, render_template
-
+from flask import Flask, render_template, request
+import boto3
+from botocore.config import Config
 import config
+import uuid
+
+s3_resource = boto3.resource(
+  's3',
+  aws_access_key_id = config.ACCESS_KEY,
+  aws_secret_access_key = config.SECRET_KEY,
+  region_name='us-east-2'
+) 
+
+s3_client = boto3.client(
+  's3',
+  aws_access_key_id = config.ACCESS_KEY,
+  aws_secret_access_key = config.SECRET_KEY,
+  region_name='us-east-2',
+  config=Config(s3={'addressing_style': 'path'}, signature_version='s3v4')
+)
+
+sqs = boto3.client(
+  'sqs',
+  aws_access_key_id = config.ACCESS_KEY,
+  aws_secret_access_key = config.SECRET_KEY,
+  region_name='us-east-2',
+)
+
+db_client = boto3.client(
+  'dynamodb',
+  aws_access_key_id = config.ACCESS_KEY,
+  aws_secret_access_key = config.SECRET_KEY,
+  region_name='us-east-2',
+  )
 
 app = Flask(__name__)
+
 @app.route("/")
-
-
-
 def main():
-  s3_resource = boto3.resource(
-    's3',
-    aws_access_key_id = config.ACCESS_KEY,
-    aws_secret_access_key = config.SECRET_KEY,
-  ) 
-  s3_client = boto3.client(
-    's3',
-    aws_access_key_id = config.ACCESS_KEY,
-    aws_secret_access_key = config.SECRET_KEY,
-  )
+  response = s3_client.generate_presigned_post(Bucket='mmatros', Key='uploads/${filename}', Fields={}, Conditions=[],ExpiresIn=604800)
+  print(response)
+  return render_template('index.html', config=config, data=response)
 
-  response = s3_client.generate_presigned_post(Bucket='aws-projekt', Key='uploads/${filename}', Fields={}, Conditions=[],ExpiresIn=2592000)
-  return render_template('index.html', config=response)
+@app.route("/success")
+def success():
+  send_logs_to_db('upload to s3', 'test')
 
-@app.route('/images')
+@app.route('/images', methods=['GET', 'POST'])
 def list_of_images():
-  s3_resource = boto3.resource(
-    's3',
-    aws_access_key_id = config.ACCESS_KEY,
-    aws_secret_access_key = config.SECRET_KEY,
-  ) 
-  s3_client = boto3.client(
-    's3',
-    aws_access_key_id = config.ACCESS_KEY,
-    aws_secret_access_key = config.SECRET_KEY,
-  )
-  bucket = s3_resource.Bucket('aws-projekt')
-  bucketname = 'aws-projekt' # replace with your bucket name
-  # s3 = boto3.resource('s3')
-  # s3.Bucket(bucketname).download_file(filename, 'my_localimage.jpg')
-
+  bucket = s3_resource.Bucket('mmatros')
   images = []
+  imgs = []
 
   for file in bucket.objects.all():
-    url = s3_client.generate_presigned_url('get_object', Params={'Bucket': 'aws-projekt', 'Key': file.key,}, ExpiresIn=3600)
-    # url = s3_client.Bucket(bucketname).download_file(file.key, 'my_localimage.jpg')
-    images.append(url)
-    print(url)
-
+    if file.key[-1] != "/":
+      url = s3_client.generate_presigned_url('get_object', Params={'Bucket': 'mmatros', 'Key': file.key,}, ExpiresIn=604800)
+      images.append({'key': file.key, 'url': url })
 
   return render_template('images.html', images=images)
+
+@app.route("/transform", methods=['GET', 'POST'])
+def transform():
+  send_images_to_queue = request.form.getlist('imagesSelection')
+  queue_url = sqs.get_queue_url(
+    QueueName='awsprojekt.fifo'
+  )
+
+  entries = []
+  message_group_id = str(uuid.uuid4())
+  for item in send_images_to_queue:
+    entries.append({
+      'Id': str(uuid.uuid4()),
+      'MessageBody': item,
+      'MessageDeduplicationId': str(uuid.uuid4()),
+      'MessageGroupId': message_group_id,
+    })
+  print('entries', entries)
+  response = sqs.send_message_batch(
+      QueueUrl='https://sqs.us-east-2.amazonaws.com/333651036015/awsprojekt.fifo',
+      Entries=entries,
+  )
+  send_logs_to_db('send to sqs', 'test')
+  print('response', response)
+
+  return render_template('images.html')
+
+def send_logs_to_db(action, file):
+  db_client.put_item(
+    TableName='logs',
+    Item={
+        'logId': { "S": str(uuid.uuid4())},
+        'action': { "S": action},
+        'file': { "S": file},
+    },
+  )
 
 if __name__ == "__main__":
   app.run(host='0.0.0.0', port=80, use_reloader=True)
