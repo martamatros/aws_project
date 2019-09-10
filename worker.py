@@ -33,6 +33,15 @@ db_client = boto3.client(
   region_name='us-east-2',
 )
 
+def send_logs_to_db(action, file):
+  db_client.put_item(
+    TableName='logs',
+    Item={
+        'logId': { "S": str(uuid.uuid4())},
+        'action': { "S": action},
+        'file': { "S": file},
+    },
+  )
 
 while True:
   response = sqs.receive_message(QueueUrl='https://sqs.us-east-2.amazonaws.com/333651036015/awsprojekt.fifo',MaxNumberOfMessages=10, VisibilityTimeout=30) 
@@ -47,12 +56,3 @@ while True:
       send_logs_to_db('transform image', message['Body'])
 
 
-def send_logs_to_db(action, file):
-  db_client.put_item(
-    TableName='logs',
-    Item={
-        'logId': { "S": str(uuid.uuid4())},
-        'action': { "S": action},
-        'file': { "S": file},
-    },
-  )

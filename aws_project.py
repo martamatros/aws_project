@@ -45,7 +45,7 @@ def main():
 
 @app.route("/success")
 def success():
-  send_logs_to_db('upload to s3', 'test')
+  send_logs_to_db('upload to s3', request.args.get('key'))
   return render_template('success.html')
 
 @app.route('/images', methods=['GET', 'POST'])
