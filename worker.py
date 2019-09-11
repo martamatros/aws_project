@@ -46,15 +46,18 @@ def send_logs_to_db(action, file):
   )
 
 while True:
-  response = sqs.receive_message(QueueUrl='https://sqs.us-east-2.amazonaws.com/333651036015/awsprojekt.fifo',MaxNumberOfMessages=10, VisibilityTimeout=30) 
-  if response['Messages']:
+  response = sqs.receive_message(QueueUrl='https://sqs.us-east-2.amazonaws.com/333651036015/awsprojekt.fifo') 
+  try:
     for message in response['Messages']:
-      print(message['Body'])
       s3_resource.Object('mmatros', message['Body']).download_file(message['Body'])
       img = Image.open(message['Body'])
       img.resize((int(round(img.size[0]*0.5)), int(round(img.size[1]*0.5)))).save(message['Body'])
       s3_resource.Object('mmatros', message['Body']).upload_file(message['Body'])
       sqs.delete_message(QueueUrl='https://sqs.us-east-2.amazonaws.com/333651036015/awsprojekt.fifo', ReceiptHandle=message['ReceiptHandle'])
       send_logs_to_db('transform image', message['Body'])
+      print('image transformed!')
+  except KeyError:
+    print('No messages')
+
 
 

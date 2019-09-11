@@ -78,7 +78,7 @@ def transform():
       Entries=entries,
   )
 
-  return render_template('images.html')
+  return render_template('transform.html')
 
 def send_logs_to_db(action, file):
   print(str(datetime.now()))
